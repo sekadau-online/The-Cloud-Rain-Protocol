@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts@5.0.1/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts@5.0.1/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts@5.0.1/access/Ownable.sol";
+import "@openzeppelin/contracts@5.0.1/utils/cryptography/ECDSA.sol";
 
 /// @title Rain Cloud Protocol (RCP)
 /// @notice ERC20 token pegged 1:1 with IDR with gasless minting capabilities
@@ -25,12 +25,14 @@ contract RainCloudProtocol is ERC20, ERC20Permit, Ownable {
         keccak256("Mint(address to,uint256 amount,uint256 nonce,uint256 deadline)");
 
     /// @param initialSupply Initial token supply in wei (set to 0 for no initial mint)
-    constructor(uint256 initialSupply) 
-        ERC20("Rain Cloud Protocol", "RCP") 
-        ERC20Permit("Rain Cloud Protocol") 
+    /// @param initialOwner The address that will receive the initial supply and become the owner.
+    constructor(uint256 initialSupply, address initialOwner)
+        ERC20("Rain Cloud Protocol", "RCP")
+        ERC20Permit("Rain Cloud Protocol")
+        Ownable(initialOwner)
     {
         if (initialSupply > 0) {
-            _mint(msg.sender, initialSupply);
+            _mint(initialOwner, initialSupply);
         }
     }
 
@@ -64,7 +66,7 @@ contract RainCloudProtocol is ERC20, ERC20Permit, Ownable {
         );
 
         require(digest.recover(v, r, s) == owner(), "RCP: Invalid signature");
-        
+
         mintNonces[to] = nonce + 1; // Prevent replay attacks
         _mint(to, amount);
     }
@@ -97,7 +99,8 @@ contract RainCloudProtocol is ERC20, ERC20Permit, Ownable {
     }
 
     // ============== Overrides ==============
-    // Explicit overrides for clarity
+    // The functions below are overridden to allow for future extensions.
+    // They are required by the compiler in this inheritance structure.
     function _afterTokenTransfer(address from, address to, uint256 amount)
         internal
         override(ERC20)
@@ -105,16 +108,16 @@ contract RainCloudProtocol is ERC20, ERC20Permit, Ownable {
         super._afterTokenTransfer(from, to, amount);
     }
 
-    function _burn(address account, uint256 amount) 
-        internal 
-        override(ERC20) 
+    function _burn(address account, uint256 amount)
+        internal
+        override(ERC20)
     {
         super._burn(account, amount);
     }
 
-    function _mint(address account, uint256 amount) 
-        internal 
-        override(ERC20) 
+    function _mint(address account, uint256 amount)
+        internal
+        override(ERC20)
     {
         super._mint(account, amount);
     }
